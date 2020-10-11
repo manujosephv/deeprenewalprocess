@@ -34,7 +34,7 @@ from gluonts.core.serde import dump_code, dump_json, load_code, load_json
 from gluonts.dataset.common import ProcessStartField, DataEntry, ListDataset
 from gluonts.dataset.field_names import FieldName
 from gluonts.evaluation import Evaluator
-# from gluonts.evaluation.backtest import backtest_metrics
+from gluonts.model.forecast import QuantileForecast, SampleForecast
 from gluonts.evaluation.backtest import make_evaluation_predictions 
 from gluonts.trainer import Trainer
 from deeprenewal import DeepRenewalEstimator, IntermittentEvaluator
@@ -105,32 +105,6 @@ def testAddInterDemandPeriodFeature(start, target, is_train):
     assert np.array_equal(mat, target[1])
 
 
-@pytest.mark.parametrize("is_train", ZERO_DEMAND_TEST_VALUES["is_train"])
-@pytest.mark.parametrize("target", ZERO_DEMAND_TEST_VALUES["target"])
-@pytest.mark.parametrize("start", ZERO_DEMAND_TEST_VALUES["start"])
-def testDropNonZeroTarget(start, target, is_train):
-    pred_length = 13
-    input_fields = ["feature1", "feature2"]
-    t = DropNonZeroTarget(
-        input_fields=input_fields, target_field="target", pred_length=pred_length
-    )
-
-    assert_serializable(t)
-
-    data = {
-        "start": start,
-        "target": target[0],
-        "feature1": np.random.rand(*target[0].shape),
-        "feature2": np.random.rand(*target[0].shape),
-    }
-    res = t.map_transform(data, is_train)
-
-    assert np.array_equal(res["target"], target[1])
-    assert len(res["feature1"]) == len(res["target"])
-    assert len(res["feature2"]) == len(res["target"])
-    # assert np.array_equal(res['target'],target[1])
-
-
 @pytest.mark.parametrize("type", DEEP_RENEWAL_TEST_VALUES["type"])
 @pytest.mark.parametrize("hybridize", DEEP_RENEWAL_TEST_VALUES["hybridize"])
 @pytest.mark.parametrize("freq", DEEP_RENEWAL_TEST_VALUES["freq"])
@@ -170,8 +144,6 @@ def testDeepRenewal(type, hybridize, freq, num_feat_dynamic_real, cardinality):
     else:
         accuracy = 1.3
     assert agg_metrics['ND']<= accuracy
-
-
 
 def make_dummy_datasets_with_features(
     num_ts: int = 5,
@@ -276,6 +248,218 @@ def assert_padded_array(
         f"Got {sampled_no_padding} but should be {reference_no_padding}."
     )
 
+def data_iterator(ts):
+    """
+    :param ts: list of pd.Series or pd.DataFrame
+    :return:
+    """
+    for i in range(len(ts)):
+        yield ts[i]
+
+
+def fcst_iterator(fcst, start_dates, freq):
+    """
+    :param fcst: list of numpy arrays with the sample paths
+    :return:
+    """
+    for i in range(len(fcst)):
+        yield SampleForecast(
+            samples=fcst[i], start_date=start_dates[i], freq=freq
+        )
+
+
+def iterator(it):
+    """
+    Convenience function to toggle whether to consume dataset and forecasts as iterators or iterables.
+    :param it:
+    :return: it (as iterator)
+    """
+    return iter(it)
+
+
+def iterable(it):
+    """
+    Convenience function to toggle whether to consume dataset and forecasts as iterators or iterables.
+    :param it:
+    :return: it (as iterable)
+    """
+    return list(it)
+
+
+def naive_forecaster(ts, prediction_length, num_samples=100, target_dim=0):
+    """
+    :param ts: pandas.Series
+    :param prediction_length:
+    :param num_samples: number of sample paths
+    :param target_dim: number of axes of target (0: scalar, 1: array, ...)
+    :return: np.array with dimension (num_samples, prediction_length)
+    """
+
+    # naive prediction: last observed value
+    naive_pred = ts.values[-prediction_length - 1]
+    assert len(naive_pred.shape) == target_dim
+    return np.tile(
+        naive_pred,
+        (num_samples, prediction_length) + tuple(1 for _ in range(target_dim)),
+    )
+
+def naive_multivariate_forecaster(ts, prediction_length, num_samples=100):
+    return naive_forecaster(ts, prediction_length, num_samples, target_dim=1)
+
+
+def calculate_metrics(
+    timeseries,
+    evaluator,
+    ts_datastructure,
+    has_nans=False,
+    forecaster=naive_forecaster,
+    input_type=iterator,
+):
+    num_timeseries = timeseries.shape[0]
+    num_timestamps = timeseries.shape[1]
+
+    if has_nans:
+        timeseries[0, 1] = np.nan
+        timeseries[0, 7] = np.nan
+
+    num_samples = 100
+    prediction_length = 3
+    freq = "1D"
+
+    ts_start_dates = (
+        []
+    )  # starting date of each time series - can be different in general
+    pd_timeseries = []  # list of pandas.DataFrame
+    samples = []  # list of forecast samples
+    start_dates = []  # start date of the prediction range
+    for i in range(num_timeseries):
+        ts_start_dates.append(pd.Timestamp(year=2018, month=1, day=1, hour=1))
+        index = pd.date_range(
+            ts_start_dates[i], periods=num_timestamps, freq=freq
+        )
+
+        pd_timeseries.append(ts_datastructure(timeseries[i], index=index))
+        samples.append(
+            forecaster(pd_timeseries[i], prediction_length, num_samples)
+        )
+        start_dates.append(
+            pd.date_range(
+                ts_start_dates[i], periods=num_timestamps, freq=freq
+            )[-prediction_length]
+        )
+
+    # data iterator
+    data_iter = input_type(data_iterator(pd_timeseries))
+    fcst_iter = input_type(fcst_iterator(samples, start_dates, freq))
+
+    # evaluate
+    agg_df, item_df = evaluator(data_iter, fcst_iter)
+    return agg_df, item_df
+
+QUANTILES = [str(q / 10.0) for q in range(1, 10)]
+
+TIMESERIES = [
+    np.zeros((5, 10), dtype=np.float64),
+    np.ones((5, 10), dtype=np.float64),
+    np.ones((5, 10), dtype=np.float64),
+    np.arange(0, 50, dtype=np.float64).reshape(5, 10),
+]
+
+RES = [
+    {
+        "MSE": 0.0,
+        "abs_error": 0.0,
+        "abs_target_sum": 0.0,
+        "abs_target_mean": 0.0,
+        "seasonal_error": 0.0,
+        "MAPE": 0.0,
+        "RMSE": 0.0,
+        "CFE": 0,
+        "PIS": 0,
+        "SPEC_0.75": 0,
+        "n":  15
+
+    },
+    {
+        "MSE": 0.0,
+        "abs_error": 0.0,
+        "abs_target_sum": 15.0,
+        "abs_target_mean": 1.0,
+        "seasonal_error": 0.0,
+        "MAPE": 0.0,
+        "RMSE": 0.0,
+        "CFE": 0,
+        "PIS": 0,
+        "SPEC_0.75": 0,
+        "n": 15
+    },
+    {
+        "MSE": 0.0,
+        "abs_error": 0.0,
+        "abs_target_sum": 14.0,
+        "abs_target_mean": 1.0,
+        "seasonal_error": 0.0,
+        "MAPE": 0.0,
+        "RMSE": 0.0,
+        "CFE": 0,
+        "PIS": 0,
+        "SPEC_0.75": 0,
+        "n": 15,
+        "non_zero_n": 14
+    },
+    {
+        "MSE": 4.666666666666,
+        "abs_error": 30.0,
+        "abs_target_sum": 420.0,
+        "abs_target_mean": 28.0,
+        "seasonal_error": 6.0,
+        "MASE": 1.0,
+        "MAPE": 0.10311221153252485,
+        "MAAPE": 0.10176599413474399,
+        "RMSE": 2.160246899469287,
+        "MRAE": 1.0,
+        "CFE": 30.,
+        "PIS": -50.,
+        "NOSp": 1.,
+        "SPEC_0.75": 2.5,
+        "n": 15,
+        "non_zero_n": 15,
+        "RelRMSE": 0.5773502691896258,
+        "RelMAE": 0.3333333333333333,
+        "PBMAE": 0.0
+    },
+]
+
+HAS_NANS = [False, False, True, False]
+
+
+INPUT_TYPE = [iterable, iterable, iterable, iterator]
+
+
+@pytest.mark.parametrize(
+    "timeseries, res, has_nans, input_type",
+    zip(TIMESERIES, RES, HAS_NANS, INPUT_TYPE),
+)
+def test_metrics(timeseries, res, has_nans, input_type):
+    ts_datastructure = pd.Series
+    evaluator = IntermittentEvaluator(quantiles=QUANTILES, num_workers=None, calculate_spec=True)
+    agg_metrics, item_metrics = calculate_metrics(
+        timeseries,
+        evaluator,
+        ts_datastructure,
+        has_nans=has_nans,
+        input_type=input_type,
+    )
+
+    for metric, score in agg_metrics.items():
+        if metric in res.keys():
+            assert abs(score - res[metric]) < 0.001, (
+                "Scores for the metric {} do not match: \nexpected: {} "
+                "\nobtained: {}".format(metric, res[metric], score)
+            )
+
+# for (timeseries, res, has_nans, input_type) in zip(TIMESERIES, RES, HAS_NANS, INPUT_TYPE):
+#     test_metrics(timeseries, res, has_nans, input_type)
 
 # testDropNonZeroTarget(
 #     start=ProcessStartField.process("2012-01-02", freq="1D"),

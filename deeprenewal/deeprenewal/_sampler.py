@@ -37,9 +37,7 @@ def shift_timestamp(ts: pd.Timestamp, offset: int) -> pd.Timestamp:
 
 
 @lru_cache(maxsize=10000)
-def _shift_timestamp_helper(
-    ts: pd.Timestamp, freq: str, offset: int
-) -> pd.Timestamp:
+def _shift_timestamp_helper(ts: pd.Timestamp, freq: str, offset: int) -> pd.Timestamp:
     """
     We are using this helper function which explicitly uses the frequency as a
     parameter, because the frequency is not included in the hash of a time
@@ -139,9 +137,7 @@ class RenewalInstanceSplitter(FlatMapTransformation):
         self.future_length = future_length
         self.lead_time = lead_time
         self.output_NTC = output_NTC
-        self.ts_fields = (
-            time_series_fields if time_series_fields is not None else []
-        )
+        self.ts_fields = time_series_fields if time_series_fields is not None else []
         self.target_field = target_field
         self.is_pad_field = is_pad_field
         self.start_field = start_field
@@ -155,12 +151,47 @@ class RenewalInstanceSplitter(FlatMapTransformation):
     def _future(self, col_name):
         return f"future_{col_name}"
 
-    def flatmap_transform(
-        self, data: DataEntry, is_train: bool
-    ) -> Iterator[DataEntry]:
+    @staticmethod
+    def remove_zero_demand(
+        data: DataEntry, target_field, input_fields, pred_length
+    ) -> DataEntry:
+        target = (
+            data[target_field].reshape(1, -1)
+            if data[target_field].ndim == 1
+            else data[target_field]
+        )
+        mask = target[0, :] > 0
+        data[target_field] = (
+            data[target_field][mask]
+            if data[target_field].ndim == 1
+            else data[target_field][:, mask]
+        )
+        # Adding Trues for the prediction length. Useful while prediction
+        mask = np.append(mask, [True] * pred_length)
+        for field in input_fields:
+            _mask = mask[: data[field].shape[-1]]
+            if data[field].ndim == 1:
+                data[field] = data[field][_mask]
+            elif data[field].ndim == 2:
+                data[field] = data[field][:, _mask]
+            else:
+                raise NotImplementedError("ndim for {} should be atmost 2")
+
+        return data
+
+    def flatmap_transform(self, data: DataEntry, is_train: bool) -> Iterator[DataEntry]:
         pl = self.future_length
         lt = self.lead_time
         slice_cols = self.ts_fields + [self.target_field]
+        true_target = data[self.target_field]
+        true_len_target = true_target.shape[-1]
+        data = self.remove_zero_demand(
+            data,
+            target_field=self.target_field,
+            input_fields=[FieldName.FEAT_TIME, FieldName.OBSERVED_VALUES],
+            pred_length=self.future_length,
+        )
+
         target = data[self.target_field]
 
         len_target = target.shape[-1]
@@ -199,9 +230,7 @@ class RenewalInstanceSplitter(FlatMapTransformation):
         for i in sampled_indices:
             pad_length = max(self.past_length - i, 0)
             if not self.pick_incomplete:
-                assert (
-                    pad_length == 0
-                ), f"pad_length should be zero, got {pad_length}"
+                assert pad_length == 0, f"pad_length should be zero, got {pad_length}"
             d = data.copy()
             for ts_field in slice_cols:
                 if i > self.past_length:
@@ -221,9 +250,7 @@ class RenewalInstanceSplitter(FlatMapTransformation):
                 else:
                     past_piece = d[ts_field][..., :i]
                 d[self._past(ts_field)] = past_piece
-                d[self._future(ts_field)] = d[ts_field][
-                    ..., i + lt : i + lt + pl
-                ]
+                d[self._future(ts_field)] = d[ts_field][..., i + lt : i + lt + pl]
                 del d[ts_field]
             pad_indicator = np.zeros(self.past_length)
             if pad_length > 0:
@@ -231,15 +258,14 @@ class RenewalInstanceSplitter(FlatMapTransformation):
 
             if self.output_NTC:
                 for ts_field in slice_cols:
-                    d[self._past(ts_field)] = d[
-                        self._past(ts_field)
-                    ].transpose()
-                    d[self._future(ts_field)] = d[
-                        self._future(ts_field)
-                    ].transpose()
+                    d[self._past(ts_field)] = d[self._past(ts_field)].transpose()
+                    d[self._future(ts_field)] = d[self._future(ts_field)].transpose()
 
             d[self._past(self.is_pad_field)] = pad_indicator
-            d[self.forecast_start_field] = shift_timestamp(
-                d[self.start_field], i + lt
-            )
+            if is_train:
+                pass
+                # d[self.forecast_start_field] = shift_timestamp(d[self.start_field], i + lt)
+            else:
+                d[self.forecast_start_field] = shift_timestamp(d[self.start_field], true_len_target + lt)
             yield d
+            

@@ -24,10 +24,12 @@ class IntermittentEvaluator(Evaluator):
         num_workers: Optional[int] = None,
         chunk_size: Optional[int] = None,
         median: Optional[bool] = True,
-        calculate_spec: Optional[bool] = False
+        calculate_spec: Optional[bool] = False,
+        round_integer: Optional[bool] = False,
     ) -> None:
         self.median = median
         self.calculate_spec = calculate_spec
+        self.round_integer = round_integer
 
         super().__init__(
             quantiles, seasonality, alpha, calculate_owa, num_workers, chunk_size
@@ -56,7 +58,9 @@ class IntermittentEvaluator(Evaluator):
         )
         # Extending the last demand to the prediction length
         date_before_forecast = forecast.index[0] - forecast.index[0].freq
-        naive_fc = time_series.loc[date_before_forecast].values.item()
+        naive_fc = time_series.loc[date_before_forecast]
+        if isinstance(naive_fc, pd.Series):
+            naive_fc = naive_fc.values.item()
         return np.atleast_1d(
             np.squeeze(pd.Series(index=forecast.index, data=naive_fc).transpose())
         )
@@ -239,6 +243,8 @@ class IntermittentEvaluator(Evaluator):
             fcst = forecast.quantile(0.5)
         else:
             fcst = forecast.mean
+        if self.round_integer:
+            fcst = np.round(fcst)
         naive_fc = self.naive_fc(time_series, forecast)
         seasonal_error = np.abs(naive_fc - pred_target)
         seasonal_sq_error = np.square(naive_fc - pred_target)
@@ -272,9 +278,9 @@ class IntermittentEvaluator(Evaluator):
             "sMAPE": self.smape(pred_target, fcst),
         }
         if self.calculate_spec:
-            metrics["SPEC_0.75"]= self.spec(pred_target, fcst, a1=0.75, a2=0.25),
-            metrics["SPEC_0.5"]= self.spec(pred_target, fcst, a1=0.5, a2=0.5),
-            metrics["SPEC_0.25"]= self.spec(pred_target, fcst, a1=0.25, a2=0.75)
+            metrics["SPEC_0.75"] = self.spec(pred_target, fcst, a1=0.75, a2=0.25)
+            metrics["SPEC_0.5"] = self.spec(pred_target, fcst, a1=0.5, a2=0.5)
+            metrics["SPEC_0.25"] = self.spec(pred_target, fcst, a1=0.25, a2=0.75)
         for quantile in self.quantiles:
             forecast_quantile = forecast.quantile(quantile.value)
 

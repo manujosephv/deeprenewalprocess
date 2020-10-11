@@ -46,6 +46,7 @@ from gluonts.transform import (
 )
 
 from ._transforms import AddInterDemandPeriodFeature, DropNonZeroTarget
+from ._sampler import RenewalInstanceSplitter
 
 # Relative imports
 from ._network import DeepRenewalPredictionNetwork, DeepRenewalTrainingNetwork
@@ -271,12 +272,12 @@ class DeepRenewalEstimator(GluonEstimator):
                         else []
                     ),
                 ),
-                DropNonZeroTarget(
-                    input_fields=[FieldName.FEAT_TIME, FieldName.OBSERVED_VALUES],
-                    target_field=FieldName.TARGET,
-                    pred_length=self.prediction_length,
-                ),
-                InstanceSplitter(
+                # DropNonZeroTarget(
+                #     input_fields=[FieldName.FEAT_TIME, FieldName.OBSERVED_VALUES],
+                #     target_field=FieldName.TARGET,
+                #     pred_length=self.prediction_length,
+                # ),
+                RenewalInstanceSplitter(
                     target_field=FieldName.TARGET,
                     is_pad_field=FieldName.IS_PAD,
                     start_field=FieldName.START,

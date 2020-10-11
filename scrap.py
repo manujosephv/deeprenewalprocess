@@ -26,31 +26,30 @@ lr_epoch_map = {1e-5: 3, 1e-4: 25, 1e-3: 3, 1e-2: 3, 1e-1: 3}
 # fit_pred = croston.fit_croston(ts, 10,'original', number_parameters=2)
 # yhat = np.concatenate([fit_pred['croston_fittedvalues'], fit_pred['croston_forecast']])
 
-# lr = 1e-4
-# epoch_multiplier = 1
+lr = 1e-4
+epoch_multiplier = 1
 
-# trainer_best_params = {
-#     "batch_size": 256 ,
-#     "learning_rate": lr,
-#     "epochs": 1,
-#     "num_batches_per_epoch": 100,
-#     "clip_gradient": "7.71224451133543",
-#     "weight_decay": 1e-5,
-# }
+trainer_best_params = {
+    "batch_size": 256 ,
+    "learning_rate": lr,
+    "epochs": 1,
+    "num_batches_per_epoch": 100,
+    "clip_gradient": "7.71224451133543",
+    "weight_decay": 1e-5,
+}
 
-# estimator_best_params = {
-#     "context_length": 2* prediction_length,
-#     "num_layers": 4,
-#     "num_cells": 128,
-#     "cell_type": "gru",
-#     "dropout_rate": 0.3,
-#     # "distr_output": PiecewiseLinearOutput(num_pieces=4),
-# }
+estimator_best_params = {
+    "context_length": prediction_length,
+    "num_layers": 1,
+    "num_cells": 32,
+    "cell_type": "gru",
+    "dropout_rate": 0.3,
+    # "distr_output": PiecewiseLinearOutput(num_pieces=4),
+}
 
-# trainer = Trainer(ctx=mx.context.gpu(), **trainer_best_params,hybridize=True) #hybridize false for development
+trainer = Trainer(ctx=mx.context.gpu(), **trainer_best_params,hybridize=True) #hybridize false for development
 
-
-# estimator = DeepRenewalEstimator(
+# estimator = DeepAREstimator(
 #     prediction_length=prediction_length,
 #     scaling=True,
 #     lags_seq=[1],
@@ -59,22 +58,23 @@ lr_epoch_map = {1e-5: 3, 1e-4: 25, 1e-3: 3, 1e-2: 3, 1e-1: 3}
 #     use_feat_static_cat=True,
 #     cardinality=cardinality,
 #     trainer=trainer,
-#     forecast_type = 'flat',
 #     **estimator_best_params
 # )
 
-# # estimator = DeepAREstimator(
-# #     prediction_length=prediction_length,
-# #     scaling=True,
-# #     lags_seq=[1],
-# #     freq=freq,
-# #     use_feat_dynamic_real=True,
-# #     use_feat_static_cat=True,
-# #     cardinality=cardinality,
-# #     trainer=trainer,
-# #     **estimator_best_params
-# # )
-# predictor = estimator.train(train_ds, test_ds)
+estimator = DeepRenewalEstimator(
+    prediction_length=prediction_length,
+    scaling=True,
+    lags_seq=[1],
+    freq=freq,
+    use_feat_dynamic_real=True,
+    use_feat_static_cat=True,
+    cardinality=cardinality,
+    trainer=trainer,
+    forecast_type = 'flat',
+    **estimator_best_params
+)
+predictor = estimator.train(train_ds, test_ds)
+
 
 # # save the trained model in tmp/
 import os
@@ -82,7 +82,7 @@ import os
 # os.makedirs("model_saved", exist_ok=True)
 from pathlib import Path
 
-# predictor.serialize(Path("saved_models/deep_renewal_process"))
+predictor.serialize(Path("saved_models/deep_renewal_process"))
 
 # loads it back
 from gluonts.model.predictor import Predictor
