@@ -16,7 +16,7 @@ DeepRenewal
 
 
 
-An implementation of the DeepRenewal Processes in GluonTS
+An implementation of the Intermittent Demand Forecasting with Deep Renewal Processes by Ali Caner Turkmen et al. in GluonTS [arXiv:1911.10416v1 [cs.LG]]
 
 
 * Free software: MIT license
