@@ -12,6 +12,49 @@ from typing import (
 
 
 class IntermittentEvaluator(Evaluator):
+    """An Evaluator which implements metrics which are more attuned to be used in intermittent
+    demand patterns
+
+        Parameters
+    ----------
+    quantiles
+        list of strings of the form 'p10' or floats in [0, 1] with
+        the quantile levels
+    seasonality
+        seasonality to use for seasonal_error, if nothing is passed
+        uses the default seasonality
+        for the given series frequency as returned by `get_seasonality`
+    alpha
+        Parameter of the MSIS metric from the M4 competition that
+        defines the confidence interval.
+        For alpha=0.05 (default) the 95% considered is considered in the metric,
+        see https://www.m4.unic.ac.cy/wp-content/uploads/2018/03/M4-Competitors-Guide.pdf
+        for more detail on MSIS
+    calculate_owa
+        Determines whether the OWA metric should also be calculated,
+        which is computationally expensive to evaluate and thus slows
+        down the evaluation process considerably.
+        By default False.
+    calculate_spec
+        Determines whether the SPEC metric should also be calculated,
+        which is computationally expensive to evaluate and thus slows
+        down the evaluation process considerably.
+        By default False.
+    median
+        Determines whether to use median or mean for point estimation
+        By default True
+    round_integer
+        Determines whether to round the forecasts to nearest digit before evaluating forecasts
+        By default True..
+    num_workers
+        The number of multiprocessing workers that will be used to process
+        the data in parallel.
+        Default is multiprocessing.cpu_count().
+        Setting it to 0 means no multiprocessing.
+    chunk_size
+        Controls the approximate chunk size each workers handles at a time.
+        Default is 32.
+    """
 
     default_quantiles = 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 

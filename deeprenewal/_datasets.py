@@ -1,20 +1,4 @@
-# Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
-
-"""
-Here we reuse the datasets used by LSTNet as the processed url of the datasets
-are available on GitHub.
-"""
+# Heavily inspired from GluonTS datasets
 import json
 import logging
 import os
@@ -210,14 +194,12 @@ def get_dataset(
     dataset_name: str, path: Path = default_dataset_path, regenerate: bool = False,
 ) -> TrainDatasets:
     """
-    Get a repository dataset.
-    The datasets that can be obtained through this function have been used
-    with different processing over time by several papers (e.g., [SFG17]_,
-    [LCY+18]_, and [YRD15]_).
+    Get the repository dataset.
+    Currently only [Retail Dataset](https://archive.ics.uci.edu/ml/datasets/online+retail) is available
     Parameters
     ----------
     dataset_name
-        name of the dataset, for instance "m4_hourly"
+        name of the dataset, for instance "retail"
     regenerate
         whether to regenerate the dataset even if a local file is present.
         If this flag is False and the file is present, the dataset will not

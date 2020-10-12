@@ -1,22 +1,8 @@
-# Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
-
+# Heavily inspired by DeepAR implemenation in GluonTS
 # Standard library imports
-import numpy as np
 from typing import List, Optional
 
-# Third-party imports
-from mxnet.gluon import HybridBlock
+import numpy as np
 
 # First-party imports
 from gluonts.core.component import DType, validated
@@ -27,8 +13,8 @@ from gluonts.model.predictor import Predictor, RepresentableBlockPredictor
 from gluonts.support.util import copy_parameters
 from gluonts.time_feature import (
     TimeFeature,
-    time_features_from_frequency_str,
     get_lags_for_frequency,
+    time_features_from_frequency_str,
 )
 from gluonts.trainer import Trainer
 from gluonts.transform import (
@@ -45,14 +31,15 @@ from gluonts.transform import (
     VstackFeatures,
 )
 
-from ._transforms import AddInterDemandPeriodFeature, DropNonZeroTarget
-from ._sampler import RenewalInstanceSplitter
+# Third-party imports
+from mxnet.gluon import HybridBlock
+
+from ._forecast_generator import IntermittentSampleForecastGenerator
 
 # Relative imports
 from ._network import DeepRenewalPredictionNetwork, DeepRenewalTrainingNetwork
-from ._forecast_generator import IntermittentSampleForecastGenerator
-
-INTERDEMAND_INTERVAL = "interdemand_interval"
+from ._sampler import RenewalInstanceSplitter
+from ._transforms import AddInterDemandPeriodFeature, DropNonZeroTarget
 
 
 class DeepRenewalEstimator(GluonEstimator):
@@ -227,10 +214,14 @@ class DeepRenewalEstimator(GluonEstimator):
             )
             + [
                 AsNumpyArray(
-                    field=FieldName.FEAT_STATIC_CAT, expected_ndim=1, dtype=self.dtype,
+                    field=FieldName.FEAT_STATIC_CAT,
+                    expected_ndim=1,
+                    dtype=self.dtype,
                 ),
                 AsNumpyArray(
-                    field=FieldName.FEAT_STATIC_REAL, expected_ndim=1, dtype=self.dtype,
+                    field=FieldName.FEAT_STATIC_REAL,
+                    expected_ndim=1,
+                    dtype=self.dtype,
                 ),
                 AsNumpyArray(
                     field=FieldName.TARGET,
@@ -346,4 +337,3 @@ class DeepRenewalEstimator(GluonEstimator):
                 forecast_type=self.forecast_type,
             ),
         )
-

@@ -372,7 +372,7 @@ class DeepRenewalTrainingNetwork(DeepRenewalNetwork):
         future_observed_values: Tensor,
     ) -> Tensor:
         """
-        Computes the loss for training DeepAR, all inputs tensors representing
+        Computes the loss for training DeepRenewalProcess, all inputs tensors representing
         time series have NTC layout.
 
         Parameters
