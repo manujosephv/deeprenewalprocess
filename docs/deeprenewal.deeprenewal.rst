@@ -4,14 +4,9 @@ deeprenewal.deeprenewal package
 Submodules
 ----------
 
-deeprenewal.deeprenewal.cli module
-----------------------------------
+.. toctree::
 
-.. automodule:: deeprenewal.deeprenewal.cli
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   deeprenewal.deeprenewal.cli
 
 Module contents
 ---------------

@@ -39,7 +39,7 @@ from ._forecast_generator import IntermittentSampleForecastGenerator
 # Relative imports
 from ._network import DeepRenewalPredictionNetwork, DeepRenewalTrainingNetwork
 from ._sampler import RenewalInstanceSplitter
-from ._transforms import AddInterDemandPeriodFeature, DropNonZeroTarget
+from ._transforms import AddInterDemandPeriodFeature
 
 
 class DeepRenewalEstimator(GluonEstimator):
