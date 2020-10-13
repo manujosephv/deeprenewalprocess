@@ -265,7 +265,7 @@ Blog
 ----
 
 For a more detailed account of the implementation and the experiments
-please visit the blog:
+please visit the blog: https://deep-and-shallow.com/2020/10/13/intermittent-demand-forecasting-with-deep-renewal-processes/
 
 References
 ----------
