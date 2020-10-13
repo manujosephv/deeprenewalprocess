@@ -4,9 +4,14 @@ tests package
 Submodules
 ----------
 
-.. toctree::
+tests.test\_deeprenewal module
+------------------------------
 
-   tests.test_deeprenewal
+.. automodule:: tests.test_deeprenewal
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

@@ -1,13 +1,6 @@
 deeprenewal.deeprenewal package
 ===============================
 
-Submodules
-----------
-
-.. toctree::
-
-   deeprenewal.deeprenewal.cli
-
 Module contents
 ---------------
 

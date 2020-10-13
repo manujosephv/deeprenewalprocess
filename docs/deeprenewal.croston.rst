@@ -4,9 +4,14 @@ deeprenewal.croston package
 Submodules
 ----------
 
-.. toctree::
+deeprenewal.croston.croston module
+----------------------------------
 
-   deeprenewal.croston.croston
+.. automodule:: deeprenewal.croston.croston
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

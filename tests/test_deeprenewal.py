@@ -38,9 +38,8 @@ from gluonts.model.forecast import QuantileForecast, SampleForecast
 from gluonts.evaluation.backtest import make_evaluation_predictions 
 from gluonts.trainer import Trainer
 from deeprenewal import DeepRenewalEstimator, IntermittentEvaluator
-from deeprenewal.deeprenewal._transforms import (
+from deeprenewal import (
     AddInterDemandPeriodFeature,
-    DropNonZeroTarget,
 )
 
 FREQ = "1D"
