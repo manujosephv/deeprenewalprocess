@@ -82,14 +82,14 @@ def evaluate_forecast(args):
 
 def main():
     """Console script for deeprenewal."""
-    parser = ArgumentParser()
+    parser = ArgumentParser(description="GluonTS implementation of paper 'Intermittent Demand Forecasting with Deep Renewal Processes'")
     # PROGRAM level args
     parser.add_argument("--use-cuda", type=bool, default=True)
-    parser.add_argument("--datasource", type=str, default="retail_dataset")
-    parser.add_argument("--regenerate-datasource", type=bool, default=False)
-    parser.add_argument("--model-save-dir", type=str, default="saved_models")
-    parser.add_argument("--point-forecast", type=str, default="mean", choices=['median', 'mean'])
-    parser.add_argument("--calculate-spec", type=bool, default=False)
+    parser.add_argument("--datasource", type=str, default="retail_dataset", choices=["retail_dataset"])
+    parser.add_argument("--regenerate-datasource", help="Whether to discard locally saved dataset and regenerate from source", type=bool, default=False)
+    parser.add_argument("--model-save-dir", help="Folder to save models", type=str, default="saved_models")
+    parser.add_argument("--point-forecast", help="How to estimate point forecast? Mean or Median", type=str, default="mean", choices=['median', 'mean'])
+    parser.add_argument("--calculate-spec", help="Whether to calculate SPEC. It is computationally expensive and therefore False by default", type=bool, default=False)
 
     # Trainer specific args
     parser.add_argument("--batch_size", type=int, default=32)
@@ -100,7 +100,7 @@ def main():
     parser.add_argument("--weight-decay", type=float, default=0.01)
 
     # Model specific args
-    parser.add_argument("--context-length-multiplier", type=int, default=2)
+    parser.add_argument("--context-length-multiplier", help="If context multipler is 2, context available to hte RNN is 2*prediction length", type=int, default=2)
     parser.add_argument("--num-layers", type=int, default=2)
     parser.add_argument("--num-cells", type=int, default=64)
     parser.add_argument("--cell-type", type=str, default="lstm")
@@ -109,10 +109,10 @@ def main():
     parser.add_argument("--use-feat-dynamic-real", type=bool, default=False)
     parser.add_argument("--use-feat-static-cat", type=bool, default=False)
     parser.add_argument("--use-feat-static-real", type=bool, default=False)
-    parser.add_argument("--scaling", type=bool, default=True)
+    parser.add_argument("--scaling", help="Whether to scale targets or not", type=bool, default=True)
     parser.add_argument("--num-parallel-samples", type=int, default=100)
-    parser.add_argument("--num-lags", type=int, default=1)
-    parser.add_argument("--forecast-type", type=str, default="hybrid")
+    parser.add_argument("--num-lags", help="Number of lags to be included as feature", type=int, default=1)
+    parser.add_argument("--forecast-type", help="Defines how the forecast is decoded. For details look at the documentation", type=str, default="hybrid")
     args = parser.parse_args()
 
     print("Arguments: " + str(args._))
