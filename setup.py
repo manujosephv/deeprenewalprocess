@@ -15,7 +15,7 @@ requirementPath = '/requirements_dev.txt'
 requirements = []
 if os.path.isfile(requirementPath):
     with open(requirementPath) as f:
-        install_requires = f.read().splitlines()
+        requirements = f.read().splitlines()
 
 setup_requirements = ['pytest-runner', ]
 
