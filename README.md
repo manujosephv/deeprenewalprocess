@@ -1,7 +1,7 @@
 # GluonTS Implementation of Deep Renewal Processes
 [![pypi](https://img.shields.io/pypi/v/deeprenewal.svg)](https://pypi.python.org/pypi/deeprenewal)
-[![travis](https://img.shields.io/travis/manujosephv/deeprenewal.svg)](https://travis-ci.com/manujosephv/deeprenewal)
-[![documentation status](https://readthedocs.org/projects/deeprenewal/badge/?version=latest)](https://deeprenewal.readthedocs.io/en/latest/?badge=latest)
+[![travis](https://img.shields.io/travis/manujosephv/deeprenewalprocess.svg)](https://travis-ci.com/manujosephv/deeprenewalprocess)
+[![documentation status](https://readthedocs.org/projects/deeprenewalprocess/badge/?version=latest)](https://deeprenewalprocess.readthedocs.io/en/latest/?badge=latest)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat-square)](https://github.com/manujosephv/deeprenewalprocess/issues)
 [![HitCount](http://hits.dwyl.com/manujosephv/deeprenewalprocess.svg)](http://hits.dwyl.com/manujosephv/deeprenewalprocess)
 <!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Zhenye-Na/DA-RNN/blob/master/src/da_rnn.ipynb.py) -->
@@ -27,32 +27,34 @@
 
 *Recommended Python Version*: 3.6
 
-.. code-block:: console
-
+```
     pip install deeprenewal
+```
 
 If you are working Windows and need to use your GPU(which I recommend), you need to first install MXNet==1.6.0 version which supports GPU
 [MXNet Official Installation Page](https://mxnet.apache.org/versions/1.6.0/get_started?platform=windows&language=python&processor=gpu&environ=pip&)
 
 And if you are facing difficulties installing the GPU version, you can try(depending on the CUDA version you have)
 
-`pip install mxnet-cu101==1.6.0 -f https://dist.mxnet.io/python/all`
-[Github Issue](https://github.com/apache/incubator-mxnet/issues/17719)
+```
+pip install mxnet-cu101==1.6.0 -f https://dist.mxnet.io/python/all
+```
+
+[Relevant Github Issue](https://github.com/apache/incubator-mxnet/issues/17719)
 
 
 The sources for DeepRenewal can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:
 
-.. code-block:: console
-
-    $ git clone git://github.com/manujosephv/deeprenewal
+```
+git clone git://github.com/manujosephv/deeprenewal
+```
 
 Once you have a copy of the source, you can install it with:
-
-.. code-block:: console
-
-    $ python setup.py install
+```
+python setup.py install
+```
 
 ## Dataset
 
