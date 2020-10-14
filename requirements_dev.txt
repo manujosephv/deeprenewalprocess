@@ -18,5 +18,5 @@ gluonts==0.5.2
 xlrd==1.2.0
 scipy==1.5.2
 
--f https://dist.mxnet.io/python/all
-mxnet==1.6
+-f https://dist.mxnet.io/python/all 
+mxnet==1.6 
