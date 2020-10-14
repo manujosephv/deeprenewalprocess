@@ -41,64 +41,42 @@ from ._network import DeepRenewalPredictionNetwork, DeepRenewalTrainingNetwork
 from ._sampler import RenewalInstanceSplitter
 from ._transforms import AddInterDemandPeriodFeature
 
+"""
+Construct a DeepRenewal estimator.
 
-class DeepRenewalEstimator(GluonEstimator):
-    # TODO Change documentation
-    """
-    Construct a DeepRenewal estimator.
+This implements an RNN-based model, close to the one described in
+https://arxiv.org/abs/1911.10416.
 
-    This implements an RNN-based model, close to the one described in
-    https://arxiv.org/abs/1911.10416.
+Parameters:
 
-    Parameters
-    ----------
-    freq
-        Frequency of the data to train on and predict
-    prediction_length
-        Length of the prediction horizon
-    trainer
-        Trainer object to be used (default: Trainer())
-    context_length
-        Number of steps to unroll the RNN for before computing predictions
-        (default: None, in which case context_length = prediction_length)
-    num_layers
-        Number of RNN layers (default: 2)
-    num_cells
-        Number of RNN cells for each layer (default: 40)
-    cell_type
-        Type of recurrent cells to use (available: 'lstm' or 'gru';
+    freq (str): Frequency of the data to train on and predict
+    prediction_length (int): Length of the prediction horizon
+    trainer (Optional[Trainer]): Trainer object to be used (default: Trainer())
+    context_length (Optional[int]): Number of steps to unroll the RNN for before computing predictions (default: None, in which case context_length = prediction_length)
+    num_layers: Number of RNN layers (default: 2)
+    num_cells: Number of RNN cells for each layer (default: 40)
+    cell_type: Type of recurrent cells to use (available: 'lstm' or 'gru';
         default: 'lstm')
-    dropout_rate
-        Dropout regularization parameter (default: 0.1)
-    use_feat_dynamic_real
-        Whether to use the ``feat_dynamic_real`` field from the data
+    dropout_rate: Dropout regularization parameter (default: 0.1)
+    use_feat_dynamic_real: Whether to use the ``feat_dynamic_real`` field from the data
         (default: False)
-    use_feat_static_cat
-        Whether to use the ``feat_static_cat`` field from the data
+    use_feat_static_cat: Whether to use the ``feat_static_cat`` field from the data
         (default: False)
-    use_feat_static_real
-        Whether to use the ``feat_static_real`` field from the data
+    use_feat_static_real: Whether to use the ``feat_static_real`` field from the data
         (default: False)
-    cardinality
-        Number of values of each categorical feature.
+    cardinality: Number of values of each categorical feature.
         This must be set if ``use_feat_static_cat == True`` (default: None)
-    embedding_dimension
-        Dimension of the embeddings for categorical features
+    embedding_dimension: Dimension of the embeddings for categorical features
         (default: [min(50, (cat+1)//2) for cat in cardinality])
-    scaling
-        Whether to automatically scale the target values (default: true)
-    lags_seq
-        Indices of the lagged target values to use as inputs of the RNN
+    scaling: Whether to automatically scale the target values (default: true)
+    lags_seq: Indices of the lagged target values to use as inputs of the RNN
         (default: None, in which case these are automatically determined
         based on freq)
-    time_features
-        Time features to use as inputs of the RNN (default: None, in which
+    time_features: Time features to use as inputs of the RNN (default: None, in which
         case these are automatically determined based on freq)
-    num_parallel_samples
-        Number of evaluation samples per time series to increase parallelism during inference.
+    num_parallel_samples: Number of evaluation samples per time series to increase parallelism during inference.
         This is a model optimization that does not affect the accuracy (default: 100)
-    forecast_type
-        The model outputs M and Q. This determines how those parameters are translated to a
+    forecast_type: The model outputs M and Q. This determines how those parameters are translated to a
         regular timeseries forecast.
         flat --> A flat forecast of M/Q for the prediction length
         exact --> Will use M and Q to produce a foreast with (Q) times 0,M, repeat
@@ -109,6 +87,68 @@ class DeepRenewalEstimator(GluonEstimator):
         flat --> 11, 11, 11, 11, 11
         exact --> 0, 22, 33, 0, 0
         hybrid --> 11, 11, 33, 3, 3 (22/2, 22/2, 33/1, 12/4, 12/4)
+"""
+
+
+class DeepRenewalEstimator(GluonEstimator):
+    """Construct a DeepRenewal estimator.
+
+    This implements an RNN-based model, close to the one described in
+    https://arxiv.org/abs/1911.10416.
+
+    Args:
+        freq (str):
+            Frequency of the data to train on and predict
+        prediction_length (int):
+            Length of the prediction horizon
+        trainer (Optional[Trainer], optional):
+            Trainer object to be used. Defaults to Trainer().
+        context_length (Optional[int], optional):
+            Number of steps to unroll the RNN for before
+            computing predictions. Defaults to None in which case context_length = prediction_length.
+        num_layers (Optional[int], optional):
+            Number of RNN layers. Defaults to 2.
+        num_cells (Optional[int], optional):
+            Number of RNN cells for each layer. Defaults to 40.
+        cell_type (Optional[str], optional):
+            Type of recurrent cells to use (available: 'lstm' or 'gru'). Defaults to "lstm".
+        dropout_rate (Optional[float], optional):
+            Dropout regularization parameter. Defaults to 0.1.
+        use_feat_dynamic_real (Optional[bool], optional):
+            Whether to use the ``feat_dynamic_real`` field from the data. Defaults to False.
+        use_feat_static_cat (Optional[bool], optional):
+            Whether to use the ``feat_static_cat`` field from the data. Defaults to False.
+        use_feat_static_real (Optional[bool], optional):
+            Whether to use the ``feat_static_real`` field from the data. Defaults to False.
+        cardinality (Optional[List[int]], optional):
+            Number of values of each categorical feature.
+            This must be set if ``use_feat_static_cat == True``. Defaults to None.
+        embedding_dimension (Optional[List[int]], optional):
+            Dimension of the embeddings for categorical features.
+            Defaults to None in which case [min(50, (cat+1)//2) for cat in cardinality].
+        scaling (Optional[bool], optional):
+            Whether to automatically scale the target values. Defaults to True.
+        lags_seq (Optional[List[int]], optional):
+            Indices of the lagged target values to use as inputs of the RNN
+            Defaults to None in which case these are automatically determined based on freq.
+        time_features (Optional[List[TimeFeature]], optional):
+            Time features to use as inputs of the RNN.
+            Defaults to None in which case these are automatically determined based on freq.
+        num_parallel_samples (Optional[int], optional):
+            Number of evaluation samples per time series to increase parallelism during inference.
+            This is a model optimization that does not affect the accuracy. Defaults to 100.
+        forecast_type (Optional[str], optional):
+            The model outputs M and Q. This determines how those parameters are translated to a
+            regular timeseries forecast.
+            flat --> A flat forecast of M/Q for the prediction length
+            exact --> Will use M and Q to produce a foreast with (Q) times 0,M, repeat
+            hybrid --> Will use M and Q to create flat forecasts, but the M/Q changes depending
+            on the subsequent predictions
+            eg: We trained the model with prediction length = 5. the output of the model are
+            M --> 22,33,12, Q--> 2,1,4
+            flat --> 11, 11, 11, 11, 11
+            exact --> 0, 22, 33, 0, 0
+            hybrid --> 11, 11, 33, 3, 3 (22/2, 22/2, 33/1, 12/4, 12/4). Defaults to "flat".
     """
 
     @validated()
@@ -116,24 +156,25 @@ class DeepRenewalEstimator(GluonEstimator):
         self,
         freq: str,
         prediction_length: int,
-        trainer: Trainer = Trainer(),
+        trainer: Optional[Trainer] = Trainer(),
         context_length: Optional[int] = None,
-        num_layers: int = 2,
-        num_cells: int = 40,
-        cell_type: str = "lstm",
-        dropout_rate: float = 0.1,
-        use_feat_dynamic_real: bool = False,
-        use_feat_static_cat: bool = False,
-        use_feat_static_real: bool = False,
+        num_layers: Optional[int] = 2,
+        num_cells: Optional[int] = 40,
+        cell_type: Optional[str] = "lstm",
+        dropout_rate: Optional[float] = 0.1,
+        use_feat_dynamic_real: Optional[bool] = False,
+        use_feat_static_cat: Optional[bool] = False,
+        use_feat_static_real: Optional[bool] = False,
         cardinality: Optional[List[int]] = None,
         embedding_dimension: Optional[List[int]] = None,
-        scaling: bool = True,
+        scaling: Optional[bool] = True,
         lags_seq: Optional[List[int]] = None,
         time_features: Optional[List[TimeFeature]] = None,
-        num_parallel_samples: int = 100,
-        forecast_type="flat",
-        dtype: DType = np.float32,
+        num_parallel_samples: Optional[int] = 100,
+        forecast_type: Optional[str] = "flat",
+        dtype: Optional[DType] = np.float32,
     ) -> None:
+
         super().__init__(trainer=trainer, dtype=dtype)
 
         assert prediction_length > 0, "The value of `prediction_length` should be > 0"

@@ -1,17 +1,15 @@
-#Heavily inspired by GluonTS Implementation
+# Heavily inspired by GluonTS Implementation
 from functools import lru_cache
 from typing import Iterator, List, Optional
 
 import numpy as np
 import pandas as pd
-
 from gluonts.core.component import validated
 from gluonts.core.exception import GluonTSDateBoundsError
 from gluonts.dataset.common import DataEntry
 from gluonts.dataset.field_names import FieldName
-
 from gluonts.transform._base import FlatMapTransformation
-from gluonts.transform.sampler import InstanceSampler, ContinuousTimePointSampler
+from gluonts.transform.sampler import ContinuousTimePointSampler, InstanceSampler
 
 
 def shift_timestamp(ts: pd.Timestamp, offset: int) -> pd.Timestamp:
@@ -47,7 +45,7 @@ def _shift_timestamp_helper(ts: pd.Timestamp, freq: str, offset: int) -> pd.Time
 
 class RenewalInstanceSplitter(FlatMapTransformation):
     """
-    Selects training instances, after removing the zero demand cases from the 
+    Selects training instances, after removing the zero demand cases from the
     training sequence, by slicing the target and other time series
     like arrays at random points in training mode or at the last time point in
     prediction mode. Assumption is that all time like arrays start at the same
@@ -255,6 +253,7 @@ class RenewalInstanceSplitter(FlatMapTransformation):
                 pass
                 # d[self.forecast_start_field] = shift_timestamp(d[self.start_field], i + lt)
             else:
-                d[self.forecast_start_field] = shift_timestamp(d[self.start_field], true_len_target + lt)
+                d[self.forecast_start_field] = shift_timestamp(
+                    d[self.start_field], true_len_target + lt
+                )
             yield d
-            

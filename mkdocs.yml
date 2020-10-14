@@ -13,7 +13,11 @@ theme:
     primary: deep purple
 plugins:
   - search
-  - mkdocstrings
+  - mkdocstrings:
+      handlers:
+        python:
+          rendering:
+            show_root_heading: yes
 repo_url: https://github.com/manujosephv/deeprenewalprocess
 extra:
   social:

@@ -9,13 +9,15 @@ import pandas as pd
 from scipy.optimize import minimize
 
 
-def fit_croston(input_endog, forecast_length, croston_variant="original", number_parameters=2):
+def fit_croston(
+    input_endog, forecast_length, croston_variant="original", number_parameters=2
+):
     """
-        :param input_endog: numpy array of intermittent demand time series
-        :param forecast_length: forecast horizon
-        :param croston_variant: croston model type
-        :return: dictionary of model parameters, in-sample forecast, and out-of-sample forecast
-        """
+    :param input_endog: numpy array of intermittent demand time series
+    :param forecast_length: forecast horizon
+    :param croston_variant: croston model type
+    :return: dictionary of model parameters, in-sample forecast, and out-of-sample forecast
+    """
 
     input_series = np.asarray(input_endog)
     epsilon = 1e-7
@@ -67,7 +69,9 @@ def fit_croston(input_endog, forecast_length, croston_variant="original", number
     }
 
 
-def _croston(input_series, input_series_length, croston_variant, alpha, horizon, epsilon):
+def _croston(
+    input_series, input_series_length, croston_variant, alpha, horizon, epsilon
+):
 
     # Croston decomposition
     non_zero_demand = np.where(input_series != 0)[0]  # find location of non-zero demand
@@ -156,7 +160,12 @@ def _croston(input_series, input_series_length, croston_variant, alpha, horizon,
 
 
 def _croston_opt(
-    input_series, input_series_length, croston_variant, epsilon, alpha=None, number_parameters=1
+    input_series,
+    input_series_length,
+    croston_variant,
+    epsilon,
+    alpha=None,
+    number_parameters=1,
 ):
 
     p0 = np.array([0.1] * number_parameters)
@@ -191,4 +200,3 @@ def _croston_cost(p0, input_series, input_series_length, croston_variant, epsilo
     E = np.mean(E ** 2)
 
     return E
-

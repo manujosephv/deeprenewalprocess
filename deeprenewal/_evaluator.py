@@ -1,59 +1,44 @@
-from gluonts.evaluation import Evaluator
+from typing import Dict, Iterable, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
+from gluonts.evaluation import Evaluator
 from gluonts.model.forecast import Forecast, Quantile
-from typing import (
-    Dict,
-    Iterable,
-    Optional,
-    Tuple,
-    Union,
-)
 
 
 class IntermittentEvaluator(Evaluator):
     """An Evaluator which implements metrics which are more attuned to be used in intermittent
     demand patterns
 
-        Parameters
-    ----------
-    quantiles
-        list of strings of the form 'p10' or floats in [0, 1] with
-        the quantile levels
-    seasonality
-        seasonality to use for seasonal_error, if nothing is passed
-        uses the default seasonality
-        for the given series frequency as returned by `get_seasonality`
-    alpha
-        Parameter of the MSIS metric from the M4 competition that
-        defines the confidence interval.
-        For alpha=0.05 (default) the 95% considered is considered in the metric,
-        see https://www.m4.unic.ac.cy/wp-content/uploads/2018/03/M4-Competitors-Guide.pdf
-        for more detail on MSIS
-    calculate_owa
-        Determines whether the OWA metric should also be calculated,
-        which is computationally expensive to evaluate and thus slows
-        down the evaluation process considerably.
-        By default False.
-    calculate_spec
-        Determines whether the SPEC metric should also be calculated,
-        which is computationally expensive to evaluate and thus slows
-        down the evaluation process considerably.
-        By default False.
-    median
-        Determines whether to use median or mean for point estimation
-        By default True
-    round_integer
-        Determines whether to round the forecasts to nearest digit before evaluating forecasts
-        By default True..
-    num_workers
-        The number of multiprocessing workers that will be used to process
-        the data in parallel.
-        Default is multiprocessing.cpu_count().
-        Setting it to 0 means no multiprocessing.
-    chunk_size
-        Controls the approximate chunk size each workers handles at a time.
-        Default is 32.
+    Parameters:
+        quantiles: list of strings of the form 'p10' or floats in [0, 1] with
+            the quantile levels
+        seasonality: seasonality to use for seasonal_error, if nothing is passed
+            uses the default seasonality
+            for the given series frequency as returned by `get_seasonality`
+        alpha: Parameter of the MSIS metric from the M4 competition that
+            defines the confidence interval.
+            For alpha=0.05 (default) the 95% considered is considered in the metric,
+            see https://www.m4.unic.ac.cy/wp-content/uploads/2018/03/M4-Competitors-Guide.pdf
+            for more detail on MSIS
+        calculate_owa: Determines whether the OWA metric should also be calculated,
+            which is computationally expensive to evaluate and thus slows
+            down the evaluation process considerably.
+            By default False.
+        calculate_spec: Determines whether the SPEC metric should also be calculated,
+            which is computationally expensive to evaluate and thus slows
+            down the evaluation process considerably.
+            By default False.
+        median: Determines whether to use median or mean for point estimation
+            By default True
+        round_integer: Determines whether to round the forecasts to nearest digit before evaluating forecasts
+            By default True..
+        num_workers: The number of multiprocessing workers that will be used to process
+            the data in parallel.
+            Default is multiprocessing.cpu_count().
+            Setting it to 0 means no multiprocessing.
+        chunk_size: Controls the approximate chunk size each workers handles at a time.
+            Default is 32.
     """
 
     default_quantiles = 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
@@ -84,15 +69,15 @@ class IntermittentEvaluator(Evaluator):
     ) -> np.ndarray:
         """
 
-        Parameters
+        Parameters:
         ----------
-        time_series
-        forecast
+            time_series:time_series
+            forecast:forecast
 
-        Returns
+        Returns:
         -------
-        np.ndarray
-            time series without the forecast dates
+            np.ndarray
+                time series without the forecast dates
         """
 
         assert forecast.index.intersection(time_series.index).equals(forecast.index), (
@@ -216,29 +201,28 @@ class IntermittentEvaluator(Evaluator):
     def spec(y_true, y_pred, a1=0.75, a2=0.25):
         """Stock-keeping-oriented Prediction Error Costs (SPEC)
         Read more in the :ref:`https://arxiv.org/abs/2004.10537`.
-        Parameters
-        ----------
-        y_true : array-like of shape (n_samples,)
-            Ground truth (correct) target values.
-        y_pred : array-like of shape (n_samples,)
-            Estimated target values.
-        a1 : opportunity costs weighting parameter
-            a1 ∈ [0, ∞]. Default value is 0.75.
-        a2 : stock-keeping costs weighting parameter
-            a2 ∈ [0, ∞]. Default value is 0.25.
-        Returns
+        Parameters:
+            y_true : array-like of shape (n_samples,)
+                Ground truth (correct) target values.
+            y_pred : array-like of shape (n_samples,)
+                Estimated target values.
+            a1 : opportunity costs weighting parameter
+                a1 ∈ [0, ∞]. Default value is 0.75.
+            a2 : stock-keeping costs weighting parameter
+                a2 ∈ [0, ∞]. Default value is 0.25.
+        Returns:
         -------
-        loss : float
-            SPEC output is non-negative floating point. The best value is 0.0.
-        Examples
+            loss : float
+                SPEC output is non-negative floating point. The best value is 0.0.
+        Examples:
         --------
-        >>> from spec_metric import spec
-        >>> y_true = [0, 0, 5, 6, 0, 5, 0, 0, 0, 8, 0, 0, 6, 0]
-        >>> y_pred = [0, 0, 5, 6, 0, 5, 0, 0, 8, 0, 0, 0, 6, 0]
-        >>> spec(y_true, y_pred)
-        0.1428...
-        >>> spec(y_true, y_pred, a1=0.1, a2=0.9)
-        0.5142...
+            >>> from spec_metric import spec
+            >>> y_true = [0, 0, 5, 6, 0, 5, 0, 0, 0, 8, 0, 0, 6, 0]
+            >>> y_pred = [0, 0, 5, 6, 0, 5, 0, 0, 8, 0, 0, 0, 6, 0]
+            >>> spec(y_true, y_pred)
+            0.1428...
+            >>> spec(y_true, y_pred, a1=0.1, a2=0.9)
+            0.5142...
         """
         assert len(y_true) > 0 and len(y_pred) > 0
         assert len(y_true) == len(y_pred)

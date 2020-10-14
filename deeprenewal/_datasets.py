@@ -5,19 +5,20 @@ import os
 from collections import OrderedDict
 from functools import partial
 from pathlib import Path
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
 from gluonts.dataset.common import TrainDatasets, load_datasets
 from gluonts.dataset.field_names import FieldName
 from gluonts.dataset.repository._util import metadata, save_to_file, to_dict
-from gluonts.support.util import get_download_path
 from gluonts.gluonts_tqdm import tqdm
+from gluonts.support.util import get_download_path
 
 
 def _preprocess_retail_data(df, combination):
-    df['Country'] = df['Country'].astype("category").cat.codes
-    df['StockCode'] = df['StockCode'].astype("category").cat.codes
+    df["Country"] = df["Country"].astype("category").cat.codes
+    df["StockCode"] = df["StockCode"].astype("category").cat.codes
     df = df.groupby(["StockCode", "Country", "InvoiceDate"]).agg(
         {"Quantity": "sum", "UnitPrice": "mean"}
     )
@@ -26,14 +27,15 @@ def _preprocess_retail_data(df, combination):
     df = df.reset_index().set_index(combination)
     df = df[df.index.isin(combinations_selected)]
     max_date = df.InvoiceDate.max().replace(hour=0, minute=0, second=0)
+
     def resample_ds(df):
         df.InvoiceDate = pd.to_datetime(df.InvoiceDate, yearfirst=True)
-        df.rename(columns={"InvoiceDate":"date"},inplace=True)
+        df.rename(columns={"InvoiceDate": "date"}, inplace=True)
         new_idx = pd.date_range(
             df.date.min().replace(hour=0, minute=0, second=0),
             max_date,
             freq="1D",
-            name = 'InvoiceDate'
+            name="InvoiceDate",
         )
         df.set_index("date", inplace=True)
         df = (
@@ -48,8 +50,6 @@ def _preprocess_retail_data(df, combination):
     df = df.reset_index().groupby(combination).apply(resample_ds)
     df.Quantity = df.Quantity.clip(lower=0)
     return df
-
-
 
 
 def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
@@ -67,8 +67,8 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
     single_prediction_length = len(test_df["InvoiceDate"].unique())
     feat_static_cat = combination
     feat_dynamic_real = []
-    target = 'Quantity'
-    date_col = 'InvoiceDate'
+    target = "Quantity"
+    date_col = "InvoiceDate"
 
     os.makedirs(dataset_path, exist_ok=True)
 
@@ -85,7 +85,7 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
         ]
         _df = full_df[(full_df.StockCode == stock_code) & (full_df.Country == country)]
         train_ts = _df[target].values.ravel()
-        if (train_ts>0).sum() > (single_prediction_length+13):
+        if (train_ts > 0).sum() > (single_prediction_length + 13):
             test_feat_dyn_array = _df.loc[:, feat_dynamic_real].values.T
             train_feat_dyn_array = test_feat_dyn_array[:, :-single_prediction_length]
 
@@ -100,9 +100,7 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
             stat_cat_l.append(
                 np.squeeze(df.loc[:, feat_static_cat].drop_duplicates().values)
             )
-    stat_cat_cardinalities = [
-            len(full_df[col].unique()) for col in feat_static_cat
-        ]
+    stat_cat_cardinalities = [len(full_df[col].unique()) for col in feat_static_cat]
 
     with open(dataset_path / "metadata.json", "w") as f:
         f.write(
@@ -119,27 +117,35 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
     test_file = dataset_path / "test" / "data.json"
     train_ds = [
         {
-            FieldName.ITEM_ID: "|".join(map(str,uniq_comb)),
+            FieldName.ITEM_ID: "|".join(map(str, uniq_comb)),
             FieldName.TARGET: target.tolist(),
             FieldName.START: str(start),
             FieldName.FEAT_STATIC_CAT: fsc.tolist(),
             FieldName.FEAT_DYNAMIC_REAL: fdr.tolist(),
         }
         for uniq_comb, target, start, fdr, fsc in zip(
-            uniq_combs, train_target_l, start_l, dynamic_real_train_l, stat_cat_l,
+            uniq_combs,
+            train_target_l,
+            start_l,
+            dynamic_real_train_l,
+            stat_cat_l,
         )
     ]
     save_to_file(train_file, train_ds)
     test_ds = [
         {
-            FieldName.ITEM_ID: "|".join(map(str,uniq_comb)),
+            FieldName.ITEM_ID: "|".join(map(str, uniq_comb)),
             FieldName.TARGET: target.tolist(),
             FieldName.START: str(start),
             FieldName.FEAT_STATIC_CAT: fsc.tolist(),
             FieldName.FEAT_DYNAMIC_REAL: fdr.tolist(),
         }
         for uniq_comb, target, start, fdr, fsc in zip(
-            uniq_combs, test_target_l, start_l, dynamic_real_test_l, stat_cat_l,
+            uniq_combs,
+            test_target_l,
+            start_l,
+            dynamic_real_test_l,
+            stat_cat_l,
         )
     ]
     save_to_file(test_file, test_ds)
@@ -156,7 +162,9 @@ dataset_recipes = OrderedDict(
 
 
 def materialize_dataset(
-    dataset_name: str, path: Path = default_dataset_path, regenerate: bool = False,
+    dataset_name: str,
+    path: Path = default_dataset_path,
+    regenerate: bool = False,
 ) -> Path:
     """
     Ensures that the dataset is materialized under the `path / dataset_name`
@@ -191,27 +199,31 @@ def materialize_dataset(
 
 
 def get_dataset(
-    dataset_name: str, path: Path = default_dataset_path, regenerate: bool = False,
+    dataset_name: str,
+    path: Optional[Path] = None,
+    regenerate: bool = False,
 ) -> TrainDatasets:
     """
     Get the repository dataset.
     Currently only [Retail Dataset](https://archive.ics.uci.edu/ml/datasets/online+retail) is available
-    Parameters
-    ----------
-    dataset_name
-        name of the dataset, for instance "retail"
-    regenerate
-        whether to regenerate the dataset even if a local file is present.
-        If this flag is False and the file is present, the dataset will not
-        be downloaded again.
-    path
-        where the dataset should be saved
-    Returns
-    -------
+    Parameters:
+        dataset_name:
+            name of the dataset, for instance "retail"
+        regenerate:
+            whether to regenerate the dataset even if a local file is present.
+            If this flag is False and the file is present, the dataset will not
+            be downloaded again.
+        path:
+            where the dataset should be saved
+    Returns:
         dataset obtained by either downloading or reloading from local file.
     """
+    if path is None:
+        path = default_dataset_path
     dataset_path = materialize_dataset(dataset_name, path, regenerate)
 
     return load_datasets(
-        metadata=dataset_path, train=dataset_path / "train", test=dataset_path / "test",
+        metadata=dataset_path,
+        train=dataset_path / "train",
+        test=dataset_path / "test",
     )

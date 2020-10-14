@@ -11,12 +11,14 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-# Standard library imports
-import numpy as np
+from copy import deepcopy
 from typing import List, Optional, Tuple
 
 # Third-party imports
 import mxnet as mx
+
+# Standard library imports
+import numpy as np
 
 # First-party imports
 from gluonts.block.feature import FeatureEmbedder
@@ -24,11 +26,10 @@ from gluonts.block.scaler import MeanScaler, NOPScaler
 
 # TODO bring back validation once model is ready
 from gluonts.core.component import DType, validated
-from gluonts.distribution import DistributionOutput, Distribution
+from gluonts.distribution import Distribution, DistributionOutput
 from gluonts.distribution.distribution import getF
 from gluonts.model.common import Tensor
 from gluonts.support.util import weighted_average
-from copy import deepcopy
 
 
 def prod(xs):
@@ -95,8 +96,8 @@ class DeepRenewalNetwork(mx.gluon.HybridBlock):
         ), "Argument `target_shape` should be a tuple with 1 element at most"
 
         with self.name_scope():
-            self.proj_distr_args_m = self.distr_output_m.get_args_proj(prefix='m')
-            self.proj_distr_args_q = self.distr_output_q.get_args_proj(prefix='q')
+            self.proj_distr_args_m = self.distr_output_m.get_args_proj(prefix="m")
+            self.proj_distr_args_q = self.distr_output_q.get_args_proj(prefix="q")
             self.rnn = mx.gluon.rnn.HybridSequentialRNNCell()
             for k in range(num_layers):
                 cell = RnnCell(hidden_size=num_cells)
@@ -190,7 +191,9 @@ class DeepRenewalNetwork(mx.gluon.HybridBlock):
 
         if future_time_feat is None or future_target is None:
             time_feat = past_time_feat.slice_axis(
-                axis=1, begin=self.history_length - self.context_length, end=None,
+                axis=1,
+                begin=self.history_length - self.context_length,
+                end=None,
             )
             sequence = past_target
             sequence_length = self.history_length
@@ -198,7 +201,9 @@ class DeepRenewalNetwork(mx.gluon.HybridBlock):
         else:
             time_feat = F.concat(
                 past_time_feat.slice_axis(
-                    axis=1, begin=self.history_length - self.context_length, end=None,
+                    axis=1,
+                    begin=self.history_length - self.context_length,
+                    end=None,
                 ),
                 future_time_feat,
                 dim=1,
@@ -210,7 +215,9 @@ class DeepRenewalNetwork(mx.gluon.HybridBlock):
         # (batch_size, sub_seq_len, *target_shape, num_lags)
         lags_m = self.get_lagged_subsequences(
             F=F,
-            sequence=sequence.slice_axis(axis=2, begin=0, end=1).squeeze(axis=2), #sequence[:,:,0]
+            sequence=sequence.slice_axis(axis=2, begin=0, end=1).squeeze(
+                axis=2
+            ),  # sequence[:,:,0]
             sequence_length=sequence_length,
             indices=self.lags_seq,
             subsequences_length=subsequences_length,
@@ -218,7 +225,9 @@ class DeepRenewalNetwork(mx.gluon.HybridBlock):
 
         lags_q = self.get_lagged_subsequences(
             F=F,
-            sequence=sequence.slice_axis(axis=2, begin=1, end=2).squeeze(axis=2), #sequence[:,:,1],
+            sequence=sequence.slice_axis(axis=2, begin=1, end=2).squeeze(
+                axis=2
+            ),  # sequence[:,:,1],
             sequence_length=sequence_length,
             indices=self.lags_seq,
             subsequences_length=subsequences_length,
@@ -226,9 +235,11 @@ class DeepRenewalNetwork(mx.gluon.HybridBlock):
 
         # scale is computed on the context length last units of the past target
         # scale shape is (batch_size, 1, *target_shape)
-        #past_target[:,:,0]
+        # past_target[:,:,0]
         _, scale = self.scaler(
-            past_target.slice_axis(axis=2, begin=0, end=1).squeeze(axis=2).slice_axis(axis=1, begin=-self.context_length, end=None),
+            past_target.slice_axis(axis=2, begin=0, end=1)
+            .squeeze(axis=2)
+            .slice_axis(axis=1, begin=-self.context_length, end=None),
             past_observed_values.slice_axis(
                 axis=1, begin=-self.context_length, end=None
             ),
@@ -285,7 +296,9 @@ class DeepRenewalNetwork(mx.gluon.HybridBlock):
         )
 
         # (batch_size, sub_seq_len, input_dim)
-        inputs = F.concat(input_lags_m, input_lags_q, time_feat, repeated_static_feat, dim=-1)
+        inputs = F.concat(
+            input_lags_m, input_lags_q, time_feat, repeated_static_feat, dim=-1
+        )
 
         # unroll encoder
         outputs, state = self.rnn.unroll(
@@ -406,15 +419,21 @@ class DeepRenewalTrainingNetwork(DeepRenewalNetwork):
         # (batch_size, seq_len, *target_shape)
         target = F.concat(
             past_target.slice_axis(
-                axis=1, begin=self.history_length - self.context_length, end=None,
+                axis=1,
+                begin=self.history_length - self.context_length,
+                end=None,
             ),
             future_target,
             dim=1,
         )
 
         # (batch_size, seq_len)
-        loss_m = distr_m.loss(target.slice_axis(axis=2, begin=0, end=1).squeeze()) #target[:,:,0]
-        loss_q = distr_q.loss(target.slice_axis(axis=2, begin=1, end=2).squeeze()) # target[:,:,1]
+        loss_m = distr_m.loss(
+            target.slice_axis(axis=2, begin=0, end=1).squeeze()
+        )  # target[:,:,0]
+        loss_q = distr_q.loss(
+            target.slice_axis(axis=2, begin=1, end=2).squeeze()
+        )  # target[:,:,1]
         loss = loss_m + loss_q
 
         # (batch_size, seq_len, *target_shape)
@@ -507,14 +526,18 @@ class DeepRenewalPredictionNetwork(DeepRenewalNetwork):
             # (batch_size * num_samples, 1, *target_shape, num_lags)
             lags_m = self.get_lagged_subsequences(
                 F=F,
-                sequence=repeated_past_target.slice_axis(axis=2, begin=0, end=1).squeeze(), #repeated_past_target[:,:,0]
+                sequence=repeated_past_target.slice_axis(
+                    axis=2, begin=0, end=1
+                ).squeeze(),  # repeated_past_target[:,:,0]
                 sequence_length=self.history_length + k,
                 indices=self.shifted_lags,
                 subsequences_length=1,
             )
             lags_q = self.get_lagged_subsequences(
                 F=F,
-                sequence=repeated_past_target.slice_axis(axis=2, begin=1, end=2).squeeze(), #repeated_past_target[:,:,1]
+                sequence=repeated_past_target.slice_axis(
+                    axis=2, begin=1, end=2
+                ).squeeze(),  # repeated_past_target[:,:,1]
                 sequence_length=self.history_length + k,
                 indices=self.shifted_lags,
                 subsequences_length=1,
@@ -534,7 +557,7 @@ class DeepRenewalPredictionNetwork(DeepRenewalNetwork):
                 data=lags_scaled_q,
                 shape=(-1, 1, prod(self.target_shape) * len(self.lags_seq)),
             )
-            
+
             # (batch_size * num_samples, 1, prod(target_shape) * num_lags + num_time_features + num_static_features)
             decoder_input = F.concat(
                 input_lags_m,
@@ -556,8 +579,12 @@ class DeepRenewalPredictionNetwork(DeepRenewalNetwork):
             distr_args_m = self.proj_distr_args_m(rnn_outputs)
             distr_args_q = self.proj_distr_args_q(rnn_outputs)
             # compute likelihood of target given the predicted parameters
-            distr_m = self.distr_output_m.distribution(distr_args_m, scale=repeated_scale)
-            distr_q = self.distr_output_q.distribution(distr_args_q, scale=repeated_scale)
+            distr_m = self.distr_output_m.distribution(
+                distr_args_m, scale=repeated_scale
+            )
+            distr_q = self.distr_output_q.distribution(
+                distr_args_q, scale=repeated_scale
+            )
             # (batch_size * num_samples, 1, *target_shape)
             new_samples_m = distr_m.sample(dtype=self.dtype)
             new_samples_q = distr_q.sample(dtype=self.dtype)
@@ -575,7 +602,7 @@ class DeepRenewalPredictionNetwork(DeepRenewalNetwork):
             shape=(
                 (batch_size, self.num_parallel_samples)
                 + (self.prediction_length,)
-                + (samples.shape[-1],) 
+                + (samples.shape[-1],)
             )
         )
 
@@ -607,7 +634,7 @@ class DeepRenewalPredictionNetwork(DeepRenewalNetwork):
         Tensor
             Predicted samples
         """
-        
+
         # unroll the decoder in "prediction mode", i.e. with past data only
         _, state, scale, static_feat = self.unroll_encoder(
             F=F,

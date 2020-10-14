@@ -1,7 +1,7 @@
 # Standard library imports
+import logging
 import os
 from typing import Dict, Iterator, Optional
-import logging
 
 # Third-party imports
 import numpy as np
@@ -9,10 +9,10 @@ import pandas as pd
 
 # First-party imports
 from gluonts.core.component import validated
-from gluonts.support.pandas import forecast_start
 from gluonts.dataset.common import Dataset
 from gluonts.model.forecast import SampleForecast
 from gluonts.model.predictor import RepresentablePredictor
+from gluonts.support.pandas import forecast_start
 
 from .croston import fit_croston
 

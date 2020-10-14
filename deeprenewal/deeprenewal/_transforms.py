@@ -1,15 +1,17 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
-from typing import List
+from gluonts.core.component import DType, validated
 from gluonts.dataset.common import DataEntry
-from gluonts.core.component import validated, DType
 from gluonts.transform import (
     AddTimeFeatures,
-    target_transformation_length,
-    SimpleTransformation,
     MapTransformation,
+    SimpleTransformation,
     shift_timestamp,
+    target_transformation_length,
 )
+
 
 # TODO See if inheritance is possible from add time features
 class AddInterDemandPeriodFeature(MapTransformation):
