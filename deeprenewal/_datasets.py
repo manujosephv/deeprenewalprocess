@@ -57,7 +57,7 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
     df = pd.read_excel(retail_dataset_url)
     combination = ["StockCode", "Country"]
     df = _preprocess_retail_data(df, combination)
-    df.to_pickle("temp.pkl")
+    # df.to_pickle("temp.pkl")
     # df = pd.read_pickle("temp.pkl")
     idx = pd.IndexSlice[:, :, :split]
     train_df = df.loc[idx, :].reset_index()
@@ -86,14 +86,14 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
         _df = full_df[(full_df.StockCode == stock_code) & (full_df.Country == country)]
         train_ts = _df[target].values.ravel()
         if (train_ts > 0).sum() > (single_prediction_length + 13):
-            test_feat_dyn_array = _df.loc[:, feat_dynamic_real].values.T
-            train_feat_dyn_array = test_feat_dyn_array[:, :-single_prediction_length]
+            # test_feat_dyn_array = _df.loc[:, feat_dynamic_real].values.T
+            # train_feat_dyn_array = test_feat_dyn_array[:, :-single_prediction_length]
 
             test_ts = train_ts.copy()
             train_ts = train_ts[:-single_prediction_length]
 
-            dynamic_real_train_l.append(train_feat_dyn_array)
-            dynamic_real_test_l.append(test_feat_dyn_array)
+            # dynamic_real_train_l.append(train_feat_dyn_array)
+            # dynamic_real_test_l.append(test_feat_dyn_array)
             start_l.append(df[date_col].min())
             train_target_l.append(train_ts)
             test_target_l.append(test_ts)
@@ -121,13 +121,13 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
             FieldName.TARGET: target.tolist(),
             FieldName.START: str(start),
             FieldName.FEAT_STATIC_CAT: fsc.tolist(),
-            FieldName.FEAT_DYNAMIC_REAL: fdr.tolist(),
+            # FieldName.FEAT_DYNAMIC_REAL: fdr.tolist(),
         }
         for uniq_comb, target, start, fdr, fsc in zip(
             uniq_combs,
             train_target_l,
             start_l,
-            dynamic_real_train_l,
+            # dynamic_real_train_l,
             stat_cat_l,
         )
     ]
@@ -138,13 +138,13 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
             FieldName.TARGET: target.tolist(),
             FieldName.START: str(start),
             FieldName.FEAT_STATIC_CAT: fsc.tolist(),
-            FieldName.FEAT_DYNAMIC_REAL: fdr.tolist(),
+            # FieldName.FEAT_DYNAMIC_REAL: fdr.tolist(),
         }
         for uniq_comb, target, start, fdr, fsc in zip(
             uniq_combs,
             test_target_l,
             start_l,
-            dynamic_real_test_l,
+            # dynamic_real_test_l,
             stat_cat_l,
         )
     ]
