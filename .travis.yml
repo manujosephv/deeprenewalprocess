@@ -18,5 +18,6 @@ deploy:
   on:
     tags: true
     python: 3.6
+  skip_existing: true
 
 
