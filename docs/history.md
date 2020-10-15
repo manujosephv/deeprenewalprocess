@@ -3,7 +3,8 @@ History
 0.7.0 (2020-10-15)
 ------------------
 
-- Weird Error in build. Repushing
+- Weird Error in build. Repushing by including python version in Travis
+https://github.com/travis-ci/travis-ci/issues/10056#issuecomment-437667181
 
 0.6.0 (2020-10-15)
 ------------------
