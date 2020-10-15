@@ -53,6 +53,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/manujosephv/deeprenewal',
-    version='version='version='0.7.2''',
+    version='version='version='0.7.3''',
     zip_safe=False,
 )
