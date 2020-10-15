@@ -1,5 +1,14 @@
 History
 =======
+0.7.0 (2020-10-15)
+------------------
+
+- Weird Error in build. Repushing
+
+0.6.0 (2020-10-15)
+------------------
+
+- Removed dynamic real fom dataset. Was throwing error and was not using it
 
 0.5.0 (2020-10-15)
 ------------------
