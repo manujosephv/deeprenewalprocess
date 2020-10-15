@@ -2,7 +2,7 @@
 
 __author__ = """Manu Joseph"""
 __email__ = 'manujosephv@gmail.com'
-__version__ = '__version__ = '0.7.1''
+__version__ = '__version__ = '__version__ = '0.7.1'''
 
 # Relative imports
 from .deeprenewal._estimator import DeepRenewalEstimator
