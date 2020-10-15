@@ -14,9 +14,7 @@ pytest-runner==5.1
 
 numpy==1.16.*
 requests==2.18.*
+mxnet==1.6.0
 gluonts==0.5.2
 xlrd==1.2.0
 scipy==1.5.2
-
--f https://dist.mxnet.io/python/all 
-mxnet==1.6 
