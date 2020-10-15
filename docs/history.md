@@ -1,5 +1,11 @@
 History
 =======
+
+0.5.0 (2020-10-15)
+------------------
+
+- Fixed requirements.txt causing Travis build fail
+
 0.4.0 (2020-10-14)
 ------------------
 
