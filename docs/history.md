@@ -1,5 +1,12 @@
 History
 =======
+0.7.3 (2020-10-15)
+------------------
+
+- Fixed error with long readme
+https://github.com/pypa/warehouse/issues/5890#issuecomment-494868157
+
+
 0.7.0 (2020-10-15)
 ------------------
 
