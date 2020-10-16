@@ -66,15 +66,15 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
     full_df = df.reset_index()
     single_prediction_length = len(test_df["InvoiceDate"].unique())
     feat_static_cat = combination
-    feat_dynamic_real = []
+    # feat_dynamic_real = []
     target = "Quantity"
     date_col = "InvoiceDate"
 
     os.makedirs(dataset_path, exist_ok=True)
 
     uniq_combs = train_df[combination].drop_duplicates().apply(tuple, axis=1)
-    dynamic_real_train_l = []
-    dynamic_real_test_l = []
+    # dynamic_real_train_l = []
+    # dynamic_real_test_l = []
     stat_cat_l = []
     start_l = []
     train_target_l = []
@@ -123,7 +123,7 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
             FieldName.FEAT_STATIC_CAT: fsc.tolist(),
             # FieldName.FEAT_DYNAMIC_REAL: fdr.tolist(),
         }
-        for uniq_comb, target, start, fdr, fsc in zip(
+        for uniq_comb, target, start, fsc in zip(
             uniq_combs,
             train_target_l,
             start_l,
@@ -140,7 +140,7 @@ def generate_retail_dataset(dataset_path: Path, split: str = "2011-11-24"):
             FieldName.FEAT_STATIC_CAT: fsc.tolist(),
             # FieldName.FEAT_DYNAMIC_REAL: fdr.tolist(),
         }
-        for uniq_comb, target, start, fdr, fsc in zip(
+        for uniq_comb, target, start, fsc in zip(
             uniq_combs,
             test_target_l,
             start_l,

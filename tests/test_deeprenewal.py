@@ -35,9 +35,9 @@ from gluonts.dataset.common import ProcessStartField, DataEntry, ListDataset
 from gluonts.dataset.field_names import FieldName
 from gluonts.evaluation import Evaluator
 from gluonts.model.forecast import QuantileForecast, SampleForecast
-from gluonts.evaluation.backtest import make_evaluation_predictions 
+from gluonts.evaluation.backtest import make_evaluation_predictions
 from gluonts.trainer import Trainer
-from deeprenewal import DeepRenewalEstimator, IntermittentEvaluator
+from deeprenewal import DeepRenewalEstimator, IntermittentEvaluator, get_dataset
 from deeprenewal.deeprenewal._transforms import (
     AddInterDemandPeriodFeature,
 )
@@ -73,13 +73,13 @@ ZERO_DEMAND_TEST_VALUES = {
         ProcessStartField.process("2012-01-02", freq="1D"),
     ],
 }
-#type, hybridize, freq, num_feat_dynamic_real, cardinality
+# type, hybridize, freq, num_feat_dynamic_real, cardinality
 DEEP_RENEWAL_TEST_VALUES = {
-    "type":['synthetic','constant'],
+    "type": ["synthetic", "constant"],
     "hybridize": [True, False],
-    "freq" :["D","M"],
-    "num_feat_dynamic_real": [0,2],
-    "cardinality": [[],[2]]
+    "freq": ["D", "M"],
+    "num_feat_dynamic_real": [0, 2],
+    "cardinality": [[], [2]],
 }
 
 
@@ -104,10 +104,19 @@ def testAddInterDemandPeriodFeature(start, target, is_train):
     assert np.array_equal(mat, target[1])
 
 
+@pytest.mark.parametrize("regenerate", [True, False])
+def testDataset(regenerate):
+    dataset = get_dataset("retail_dataset", regenerate=regenerate)
+    assert dataset.metadata.prediction_length == 39
+    assert dataset.metadata.freq == "1D"
+
+
 @pytest.mark.parametrize("type", DEEP_RENEWAL_TEST_VALUES["type"])
 @pytest.mark.parametrize("hybridize", DEEP_RENEWAL_TEST_VALUES["hybridize"])
 @pytest.mark.parametrize("freq", DEEP_RENEWAL_TEST_VALUES["freq"])
-@pytest.mark.parametrize("num_feat_dynamic_real", DEEP_RENEWAL_TEST_VALUES["num_feat_dynamic_real"])
+@pytest.mark.parametrize(
+    "num_feat_dynamic_real", DEEP_RENEWAL_TEST_VALUES["num_feat_dynamic_real"]
+)
 @pytest.mark.parametrize("cardinality", DEEP_RENEWAL_TEST_VALUES["cardinality"])
 def testDeepRenewal(type, hybridize, freq, num_feat_dynamic_real, cardinality):
     prediction_length = 3
@@ -135,14 +144,13 @@ def testDeepRenewal(type, hybridize, freq, num_feat_dynamic_real, cardinality):
     )
     evaluator = Evaluator(calculate_owa=False, num_workers=0)
 
-    agg_metrics, item_metrics = evaluator(
-        ts_it, forecast_it, num_series=len(test_ds)
-    )
+    agg_metrics, item_metrics = evaluator(ts_it, forecast_it, num_series=len(test_ds))
     if type == "synthetic":
         accuracy = 1.5
     else:
         accuracy = 1.3
-    assert agg_metrics['ND']<= accuracy
+    assert agg_metrics["ND"] <= accuracy
+
 
 def make_dummy_datasets_with_features(
     num_ts: int = 5,
@@ -190,7 +198,7 @@ def make_dummy_datasets_with_features(
     )
 
 
-def make_constant_dataset(train_length,N=5, freq="D"):
+def make_constant_dataset(train_length, N=5, freq="D"):
     # generates 2 ** N - 1 timeseries with constant increasing values
     n = 2 ** N - 1
     perc_zeros = 0.5
@@ -247,6 +255,7 @@ def assert_padded_array(
         f"Got {sampled_no_padding} but should be {reference_no_padding}."
     )
 
+
 def data_iterator(ts):
     """
     :param ts: list of pd.Series or pd.DataFrame
@@ -262,9 +271,7 @@ def fcst_iterator(fcst, start_dates, freq):
     :return:
     """
     for i in range(len(fcst)):
-        yield SampleForecast(
-            samples=fcst[i], start_date=start_dates[i], freq=freq
-        )
+        yield SampleForecast(samples=fcst[i], start_date=start_dates[i], freq=freq)
 
 
 def iterator(it):
@@ -302,6 +309,7 @@ def naive_forecaster(ts, prediction_length, num_samples=100, target_dim=0):
         (num_samples, prediction_length) + tuple(1 for _ in range(target_dim)),
     )
 
+
 def naive_multivariate_forecaster(ts, prediction_length, num_samples=100):
     return naive_forecaster(ts, prediction_length, num_samples, target_dim=1)
 
@@ -333,18 +341,14 @@ def calculate_metrics(
     start_dates = []  # start date of the prediction range
     for i in range(num_timeseries):
         ts_start_dates.append(pd.Timestamp(year=2018, month=1, day=1, hour=1))
-        index = pd.date_range(
-            ts_start_dates[i], periods=num_timestamps, freq=freq
-        )
+        index = pd.date_range(ts_start_dates[i], periods=num_timestamps, freq=freq)
 
         pd_timeseries.append(ts_datastructure(timeseries[i], index=index))
-        samples.append(
-            forecaster(pd_timeseries[i], prediction_length, num_samples)
-        )
+        samples.append(forecaster(pd_timeseries[i], prediction_length, num_samples))
         start_dates.append(
-            pd.date_range(
-                ts_start_dates[i], periods=num_timestamps, freq=freq
-            )[-prediction_length]
+            pd.date_range(ts_start_dates[i], periods=num_timestamps, freq=freq)[
+                -prediction_length
+            ]
         )
 
     # data iterator
@@ -354,6 +358,7 @@ def calculate_metrics(
     # evaluate
     agg_df, item_df = evaluator(data_iter, fcst_iter)
     return agg_df, item_df
+
 
 QUANTILES = [str(q / 10.0) for q in range(1, 10)]
 
@@ -376,8 +381,7 @@ RES = [
         "CFE": 0,
         "PIS": 0,
         "SPEC_0.75": 0,
-        "n":  15
-
+        "n": 15,
     },
     {
         "MSE": 0.0,
@@ -390,7 +394,7 @@ RES = [
         "CFE": 0,
         "PIS": 0,
         "SPEC_0.75": 0,
-        "n": 15
+        "n": 15,
     },
     {
         "MSE": 0.0,
@@ -404,7 +408,7 @@ RES = [
         "PIS": 0,
         "SPEC_0.75": 0,
         "n": 15,
-        "non_zero_n": 14
+        "non_zero_n": 14,
     },
     {
         "MSE": 4.666666666666,
@@ -417,15 +421,15 @@ RES = [
         "MAAPE": 0.10176599413474399,
         "RMSE": 2.160246899469287,
         "MRAE": 1.0,
-        "CFE": 30.,
-        "PIS": -50.,
-        "NOSp": 1.,
+        "CFE": 30.0,
+        "PIS": -50.0,
+        "NOSp": 1.0,
         "SPEC_0.75": 2.5,
         "n": 15,
         "non_zero_n": 15,
         "RelRMSE": 0.5773502691896258,
         "RelMAE": 0.3333333333333333,
-        "PBMAE": 0.0
+        "PBMAE": 0.0,
     },
 ]
 
@@ -441,7 +445,9 @@ INPUT_TYPE = [iterable, iterable, iterable, iterator]
 )
 def test_metrics(timeseries, res, has_nans, input_type):
     ts_datastructure = pd.Series
-    evaluator = IntermittentEvaluator(quantiles=QUANTILES, num_workers=None, calculate_spec=True)
+    evaluator = IntermittentEvaluator(
+        quantiles=QUANTILES, num_workers=None, calculate_spec=True
+    )
     agg_metrics, item_metrics = calculate_metrics(
         timeseries,
         evaluator,
@@ -456,6 +462,7 @@ def test_metrics(timeseries, res, has_nans, input_type):
                 "Scores for the metric {} do not match: \nexpected: {} "
                 "\nobtained: {}".format(metric, res[metric], score)
             )
+
 
 # for (timeseries, res, has_nans, input_type) in zip(TIMESERIES, RES, HAS_NANS, INPUT_TYPE):
 #     test_metrics(timeseries, res, has_nans, input_type)
