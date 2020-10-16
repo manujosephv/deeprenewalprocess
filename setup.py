@@ -11,7 +11,7 @@ with open('docs/history.md') as history_file:
     history = history_file.read()
 
 # thelibFolder = os.path.dirname(os.path.realpath(__file__))
-requirementPath = '/requirements_dev.txt'
+requirementPath = 'requirements_dev.txt'
 requirements = []
 if os.path.isfile(requirementPath):
     with open(requirementPath) as f:

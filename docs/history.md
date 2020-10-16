@@ -1,5 +1,14 @@
 History
 =======
+0.3.1 (2020-10-15)
+------------------
+
+- Dependencies were not getting included. Fixed that
+
+0.3.0 (2020-10-15)
+------------------
+
+- Fixed a build error
 
 0.2.0 (2020-10-15)
 ------------------
