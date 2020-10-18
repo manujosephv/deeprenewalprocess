@@ -3,8 +3,7 @@
 [![travis](https://img.shields.io/travis/manujosephv/deeprenewalprocess.svg)](https://travis-ci.com/manujosephv/deeprenewalprocess)
 [![documentation status](https://readthedocs.org/projects/deeprenewalprocess/badge/?version=latest)](https://deeprenewalprocess.readthedocs.io/en/latest/?badge=latest)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat-square)](https://github.com/manujosephv/deeprenewalprocess/issues)
-[![HitCount](http://hits.dwyl.com/manujosephv/deeprenewalprocess.svg)](http://hits.dwyl.com/manujosephv/deeprenewalprocess)
-<!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Zhenye-Na/DA-RNN/blob/master/src/da_rnn.ipynb.py) -->
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/manujosephv/deeprenewalprocess/blob/master/examples/Forecasting%20with%20DeepRenewalProcess.ipynb)
 
 
 > Intermittent Demand Forecasting with Deep Renewal Processes
@@ -48,7 +47,7 @@ The sources for DeepRenewal can be downloaded from the `Github repo`_.
 You can either clone the public repository:
 
 ```
-git clone git://github.com/manujosephv/deeprenewal
+git clone git://github.com/manujosephv/deeprenewalprocess
 ```
 
 Once you have a copy of the source, you can install it with:
@@ -197,6 +196,7 @@ Check out the examples folder for notebooks
 ## Blog
 
 For a more detailed account of the implementation and the experiments please visit the blog:
+https://deep-and-shallow.com/2020/10/13/intermittent-demand-forecasting-with-deep-renewal-processes/
 
 
 ## References
