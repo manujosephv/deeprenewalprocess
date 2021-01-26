@@ -2,6 +2,7 @@
 [![pypi](https://img.shields.io/pypi/v/deeprenewal.svg)](https://pypi.python.org/pypi/deeprenewal)
 [![travis](https://img.shields.io/travis/manujosephv/deeprenewalprocess.svg)](https://travis-ci.com/manujosephv/deeprenewalprocess)
 [![documentation status](https://readthedocs.org/projects/deeprenewalprocess/badge/?version=latest)](https://deeprenewalprocess.readthedocs.io/en/latest/?badge=latest)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/deeprenewal)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat-square)](https://github.com/manujosephv/deeprenewalprocess/issues)
 [![HitCount](http://hits.dwyl.com/manujosephv/deeprenewalprocess.svg)](http://hits.dwyl.com/manujosephv/deeprenewalprocess)
 <!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Zhenye-Na/DA-RNN/blob/master/src/da_rnn.ipynb.py) -->
