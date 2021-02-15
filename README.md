@@ -76,6 +76,12 @@ Columns:
 * CustomerID: Customer number. Nominal, a 5-digit integral number uniquely assigned to each customer.
 * Country: Country name. Nominal, the name of the country where each customer resides.
 
+#### Use your own Dataset
+
+Since DeepRenewal is built on top of gluonTS, please follow the below tutorial from GluonTs in using Custom Datasets.
+
+https://ts.gluon.ai/examples/extended_forecasting_tutorial/extended_tutorial.html#1.3-Use-your-time-series-and-features
+
 #### Preprocessing:
 
 * Group by at StockCode, Country, InvoiceDate –> Sum of Quantity, and Mean of UnitPrice
