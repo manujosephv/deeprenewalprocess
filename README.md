@@ -9,6 +9,10 @@
 > Intermittent Demand Forecasting with Deep Renewal Processes
 > Ali Caner Turkmen, Yuyang Wang, Tim Januschowski
 
+----
+# Important Update
+**Deep Renewal Processes is now implemented in GluonTS and is actively maintained there. I recommend using that insted of this repo.**
+---
 ## Table of Contents
 
 - [Installation](#installation)
